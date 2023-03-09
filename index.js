@@ -13,8 +13,8 @@ const transporter = nodemailer.createTransport({
   port: 465,
   secure: true,
   auth: {
-    user: 'your-emailid',
-    pass: 'your-oauth-pwd'
+    user: 'mohamedaskar1002@gmail.com',
+    pass: 'oqmnhmvxkjzjdcrw'
   },
   socketTimeout: 10000, // Increase the timeout value to 10 seconds
 });
@@ -67,29 +67,32 @@ app.get('/:requestid', async (req, res) => {
     }
 
     const emails = global.emails;
-    const results = {};
-    for (const email of emails) {
+    const promises = emails.map(async (email) => {
       try {
         const result = await validator.validate(email, transporter);
-        results[email] = result.valid ? 'valid' : 'invalid:'+' '+result.reason;
+        return { email, result: result.valid ? 'valid' : 'invalid:'+' '+result.reason };
       } catch (err) {
         console.error(`Failed to validate ${email}: ${err.message}`);
-        results[email] = 'unknown';
+        return { email, result: 'unknown' };
       }
-    }
-
-    //const resultEmails = results.filter((result) => result !== null);
-    //const validEmails = emails.filter((email) => resultEmails.includes(email));
-    //const invalidEmails = emails.filter((email) => !resultEmails.includes(email));
-
-    const status = { results };
-    statusMap.set(requestid, status);
-
+    });
     
-    res.write('event: result\n');
+    const results = {};
+    
+    Promise.all(promises).then((validationResults) => {
+      validationResults.forEach(({ email, result }) => {
+        results[email] = result;
+      });
+      const status = { results };
+    statusMap.set(requestid, status);
+    
     res.write(`data: ${JSON.stringify(status)}\n\n`);
     res.end();
-  } catch (error) {
+}).catch((err) => {
+  console.error(`Failed to validate emails: ${err.message}`);
+});
+
+} catch (error) {
     console.error('Email validation failed:', error);
     res.status(500).json({ error: error.message });
   }
