@@ -13,8 +13,8 @@ const transporter = nodemailer.createTransport({
   port: 465,
   secure: true,
   auth: {
-    user: 'mohamedaskar1002@gmail.com',
-    pass: 'oqmnhmvxkjzjdcrw'
+    user: 'your-emailid',
+    pass: 'your-oauth-pwd'
   },
   socketTimeout: 10000, // Increase the timeout value to 10 seconds
 });
